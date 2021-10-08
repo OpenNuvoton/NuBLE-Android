@@ -1,0 +1,23 @@
+<component name="libraryTable">
+  <library name="Gradle: com.microsoft.appcenter:appcenter:4.1.0@aar">
+    <CLASSES>
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/ecf4c37af4a8c37c8b872d99f8a4ad6c/jetified-appcenter-4.1.0/res" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/8af8d130bb34c5cb9e92d07ff667e1ce/jetified-appcenter-4.1.0/res" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/4d4e2d83d2302fcf2713cabda40861a3/jetified-appcenter-4.1.0/AndroidManifest.xml" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/4d4e2d83d2302fcf2713cabda40861a3/jetified-appcenter-4.1.0/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/4d4e2d83d2302fcf2713cabda40861a3/jetified-appcenter-4.1.0/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/acf5c35c412e18c6115dc922ab64b129/jetified-appcenter-4.1.0/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/acf5c35c412e18c6115dc922ab64b129/jetified-appcenter-4.1.0/res" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/acf5c35c412e18c6115dc922ab64b129/jetified-appcenter-4.1.0/AndroidManifest.xml" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/0f59f8dae179ddb398b8796a2da8ef3a/jetified-appcenter-4.1.0/res" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/0f59f8dae179ddb398b8796a2da8ef3a/jetified-appcenter-4.1.0/AndroidManifest.xml" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/0f59f8dae179ddb398b8796a2da8ef3a/jetified-appcenter-4.1.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.microsoft.appcenter/appcenter/4.1.0/b13fdd4510c8b09c15c9816e470782eb5d62a3bd/appcenter-4.1.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.microsoft.appcenter/appcenter/4.1.0/41604771df332d12b8f0dfe647442a9797f02c2e/appcenter-4.1.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

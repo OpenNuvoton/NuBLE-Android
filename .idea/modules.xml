@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/M310Ble.iml" filepath="$PROJECT_DIR$/.idea/modules/M310Ble.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/FastBleLib/M310Ble.FastBleLib.iml" filepath="$PROJECT_DIR$/.idea/modules/FastBleLib/M310Ble.FastBleLib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/M310Ble.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/M310Ble.app.iml" />
+    </modules>
+  </component>
+</project>

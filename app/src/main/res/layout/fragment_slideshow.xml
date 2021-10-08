@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.OTA.SlideshowFragment">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/LINEAR_LAYOUT"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="0dp"
+                android:layout_marginEnd="0dp"
+                android:layout_marginBottom="0dp"
+                android:orientation="horizontal"/>
+
+            <TextView
+                android:id="@+id/fotatxtlog"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="" />
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/LINEAR_LAYOUT"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:id="@+id/INFO_LAYOUT"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:layout_marginStart="0dp"
+                android:layout_marginEnd="0dp"
+                android:layout_marginBottom="0dp"
+                android:layout_alignParentBottom="true"
+                android:background="@color/md_btn_selected_dark"
+                >
+
+                <ProgressBar
+                    android:id="@+id/progressbar_thput"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_below="@+id/spinner3"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginStart="0dp"
+                    android:layout_marginTop="0dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginBottom="0dp"
+                    android:layout_toEndOf="@+id/btn_runthroughput" />
+
+                <Spinner
+                    android:id="@+id/spinner2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/BLE_STATUS_TEXT"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="0dp"
+                    android:layout_marginBottom="0dp"
+                    android:layout_toEndOf="@+id/btn_sel_bin" />
+
+                <Spinner
+                    android:id="@+id/spinner3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/spinner2"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="10dp"
+
+                    android:layout_toEndOf="@+id/btn_sel_bin" />
+
+                <TextView
+                    android:id="@+id/BLE_DEVICE_TEXT"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginStart="10dp"
+
+                    android:layout_marginTop="10dp"
+                    android:layout_toEndOf="@+id/btn_san_ble"
+                    android:text="BLE Device:" />
+
+                <TextView
+                    android:id="@+id/BLE_STATUS_TEXT"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+
+                    android:layout_below="@+id/BLE_DEVICE_TEXT"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="10dp"
+
+                    android:layout_toEndOf="@+id/btn_san_ble"
+                    android:text="BLE Status:" />
+
+                <Button
+                    android:id="@+id/btn_san_ble"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+
+                    android:layout_above="@+id/btn_sel_bin"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginStart="10dp"
+
+                    android:layout_marginBottom="0dp"
+                    android:text="Scan Ble"
+                    android:textSize="8sp" />
+
+                <Button
+                    android:id="@+id/btn_sel_bin"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@+id/btn_runthroughput"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginBottom="0dp"
+                    android:text="Select Bin"
+                    android:textSize="8sp" />
+
+                <Button
+                    android:id="@+id/btn_runthroughput"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginBottom="0dp"
+                    android:text="Start OTA"
+                    android:textSize="8sp" />
+            </RelativeLayout>
+
+        </LinearLayout>
+
+
+    </RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

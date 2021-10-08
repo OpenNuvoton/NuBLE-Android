@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.info.InfoFragment">
+
+    <RelativeLayout
+
+        android:id="@+id/RelativeLayout_1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="vertical"
+        >
+
+
+        <TextView
+
+            android:id="@+id/textView1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="5dp"
+            android:text="TRSP_UART／TRSP_LED\n
+            SERVICEUUID: \n
+            00112233-4455-6677-8899-AABBCCDDEEFF\n\n
+            CHARACTERISTICUUID: \n
+            0000FA02-0000-1000-8000-00805F9B34FB\n\n
+            writeUUID: \n
+            50515253-5455-5657-5859-5A5B5C5D5E5F"/>
+
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textView1"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="5dp"
+
+            android:text="OTA\n
+            SERVICEUUID: \n
+            09102132-4354-6576-8798-a9bacbdcedfe\n\n
+            CHARACTERISTICUUID_WRITE_NOTIFY: \n
+            01112131-4151-6171-8191-a1b1c1d1e1f1\n\n
+            CHARACTERISTICUUID_WRITE_INDICATE: \n
+            02122232-4252-6272-8292-a2b2c2d2e2f2" />
+
+        />
+
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textView2"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="5dp"
+
+            android:text="Data Rate\n
+            SERVICEUUID: \n
+            00112233-4455-6677-8899-aabbccddeeff\n\n
+            CHARACTERISTICUUID_WRITE: \n
+            50515253-5455-5657-5859-5a5b5c5d5e5f\n\n
+            CHARACTERISTICUUID_NOTIFY: \n
+            0000fa02-0000-1000-8000-00805f9b34fb" />
+        />
+    </RelativeLayout>
+
+</FrameLayout>

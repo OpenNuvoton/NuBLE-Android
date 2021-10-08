@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/txtlog"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/TEST_LAYOUT"
+            android:layout_marginBottom="0dp"
+            android:fadeScrollbars="false"
+            android:padding="10dp"
+            android:scrollbars="vertical"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/txtlogtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fadeScrollbars="false"
+            android:padding="0dp"
+            android:scrollbars="vertical"
+            android:text="Throughput run log: "
+            android:textSize="13sp"
+            android:visibility="gone"
+            />
+
+        <RelativeLayout
+            android:id="@+id/TEST_LAYOUT"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/SET_LAYOUT"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:background="@color/pink"
+            android:layout_marginBottom="0dp">
+
+            <TextView
+                android:id="@+id/tv_ate_type"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_alignParentLeft="true"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:gravity="center"
+                android:text="ATE Type"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="13sp" />
+
+            <Spinner
+                android:id="@+id/sp_atetype"
+                android:layout_width="wrap_content"
+                android:layout_height="35dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_toRightOf="@id/tv_ate_type" />
+
+            <TextView
+                android:id="@+id/tv_ate_mtu_test_option"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_below="@id/tv_ate_type"
+                android:layout_alignParentLeft="true"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:gravity="center"
+                android:text="MTU ATE option"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="13sp" />
+
+            <EditText
+                android:id="@+id/et_ate_mtu_test_option"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tv_ate_type"
+                android:layout_alignParentRight="true"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="10dp"
+                android:gravity="left"
+                android:hint="enter ATE MTU option"
+                android:textSize="13sp" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/SET_LAYOUT"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/INFO_LAYOUT"
+            android:layout_marginBottom="0dp"
+            android:background="@color/md_btn_selected_dark"
+            >
+
+            <TextView
+                android:id="@+id/tv_packetlen"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_alignParentLeft="true"
+                android:layout_marginLeft="5dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:gravity="center"
+                android:text="Packet length"
+                android:textSize="13sp" />
+
+            <EditText
+                android:id="@+id/et_packetlen"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_alignParentTop="true"
+                android:layout_marginStart="0dp"
+                android:layout_marginTop="0dp"
+                android:layout_toEndOf="@+id/tv_packetlen"
+                android:layout_toRightOf="@id/tv_packetlen"
+                android:gravity="center"
+                android:inputType="number"
+                android:hint="Packet length"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tv_datamtulen"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_below="@id/tv_packetlen"
+                android:layout_alignParentLeft="true"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="0dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:gravity="center"
+                android:text="Packet length (Byte)"
+                android:textSize="13sp" />
+
+            <EditText
+                android:id="@+id/et_datamtulen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tv_packetlen"
+                android:layout_marginLeft="0dp"
+                android:layout_marginTop="0dp"
+                android:layout_marginRight="10dp"
+                android:layout_toRightOf="@id/tv_datamtulen"
+                android:gravity="center"
+                android:hint="Packet"
+                android:inputType="number"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tv_sent_packet_interval"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+
+                android:layout_alignParentTop="true"
+                android:layout_marginStart="0dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="0dp"
+                android:layout_toEndOf="@+id/et_packetlen"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:gravity="center"
+                android:text="Packet interval(ms)"
+                android:textSize="13sp" />
+
+            <EditText
+                android:id="@+id/et_sent_packet_interval"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/tv_sent_packet_interval"
+                android:layout_marginStart="0dp"
+                android:layout_marginTop="0dp"
+                android:layout_toEndOf="@+id/tv_sent_packet_interval"
+                android:layout_toRightOf="@id/tv_sent_packet_interval"
+                android:gravity="center"
+                android:hint="length"
+                android:inputType="number"
+                android:textSize="13sp" />
+
+            <Spinner
+                android:id="@+id/sp_testtype"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_alignTop="@+id/et_datamtulen"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_marginStart="0dp"
+                android:layout_marginTop="0dp"
+                android:layout_marginEnd="0dp"
+                android:layout_toEndOf="@+id/et_datamtulen"
+                android:layout_toRightOf="@id/et_datamtulen" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/INFO_LAYOUT"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp"
+            android:background="@color/md_btn_selected_dark">
+
+            <ProgressBar
+                android:id="@+id/progressbar_thput"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_below="@+id/spinner3"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="0dp"
+                android:layout_marginTop="0dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="0dp"
+                android:layout_toEndOf="@+id/btn_runthroughput" />
+
+            <Spinner
+                android:id="@+id/spinner2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/BLE_STATUS_TEXT"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="0dp"
+                android:layout_marginBottom="0dp"
+                android:outlineAmbientShadowColor="@color/white"
+                android:outlineSpotShadowColor="@color/white"
+                android:layout_toEndOf="@+id/btn_san_ble" />
+
+            <Spinner
+                android:id="@+id/spinner3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/spinner2"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+
+                android:layout_toEndOf="@+id/btn_san_ble" />
+
+            <TextView
+                android:id="@+id/BLE_DEVICE_TEXT"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_marginStart="10dp"
+
+                android:layout_marginTop="10dp"
+                android:layout_toEndOf="@+id/btn_san_ble"
+                android:text="BLE Device:" />
+
+            <TextView
+                android:id="@+id/BLE_STATUS_TEXT"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:layout_below="@+id/BLE_DEVICE_TEXT"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+
+                android:layout_toEndOf="@+id/btn_san_ble"
+                android:text="BLE Status:" />
+
+            <Button
+                android:id="@+id/btn_san_ble"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:layout_above="@+id/btn_sel_bin"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="10dp"
+
+                android:layout_marginBottom="0dp"
+                android:text="Scan Ble"
+                android:textSize="8sp" />
+
+            <Button
+                android:id="@+id/btn_runthroughput"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:layout_alignParentStart="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="0dp"
+                android:text="Run"
+                android:textSize="8sp" />
+
+            <TextView
+                android:id="@+id/ProgressNum"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@+id/btn_runthroughput"
+                android:layout_below="@+id/btn_san_ble"
+                android:layout_alignEnd="@+id/btn_san_ble"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="0dp"
+                android:layout_marginBottom="10dp"
+                android:textSize="25sp"
+                android:gravity="center"
+                android:layout_gravity="center"
+                android:textColor="@color/purple_200"
+                android:text="0%" />
+        </RelativeLayout>
+
+    </RelativeLayout>
+</LinearLayout>

@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.home.HomeFragment">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+
+        >
+
+        <TextView
+            android:id="@+id/MESSAGE_TEXT"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/SEND_TEXT"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp"
+            android:scrollbars="vertical"
+            android:textSize="12sp"
+            android:singleLine="false" />
+
+        <RelativeLayout
+            android:id="@+id/INFO_LAYOUT"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp"
+            android:visibility="visible"
+            android:background="@color/md_btn_selected_dark">
+
+            <TextView
+                android:id="@+id/BLE_DEVICE_TEXT"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_marginStart="10dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_toEndOf="@+id/btn_san_ble"
+                android:text="BLE Device:" />
+
+            <TextView
+                android:id="@+id/BLE_STATUS_TEXT"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/BLE_DEVICE_TEXT"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:layout_toEndOf="@+id/btn_san_ble"
+                android:text="BLE Status:" />
+
+            <Button
+                android:id="@+id/btn_san_ble"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:text="Scan Ble"
+                android:textSize="8sp" />
+        </RelativeLayout>
+
+
+        <EditText
+            android:id="@+id/SEND_TEXT"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/data_LL"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp"
+            android:layout_toStartOf="@+id/SEND_BUTTON"
+            android:layout_toEndOf="@+id/CLEAR_ImageButton"
+            android:ems="10"
+            android:inputType="textMultiLine"
+            android:text=""
+            android:textSize="12sp" />
+<!--        a1223344556677889900b1223344556677889900c1223344556677889900d1223344556677889900e1223344556677889900-->
+
+        <Button
+            android:id="@+id/SEND_BUTTON"
+            android:layout_width="70dp"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/data_LL"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="5dp"
+            android:layout_marginBottom="0dp"
+            android:textSize="9sp"
+            android:text="SEND" />
+
+        <RelativeLayout
+            android:id="@+id/CB_RL"
+            android:layout_width="70dp"
+            android:layout_height="wrap_content"
+
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="0dp"
+            android:layout_marginEnd="0dp"
+            android:background="@color/pink">
+
+            <RadioGroup
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <CheckBox
+                android:id="@+id/checkBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Loop" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="70dp"
+            android:layout_height="wrap_content"
+
+            android:layout_below="@+id/CB_RL"
+            android:layout_alignParentEnd="true"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="0dp"
+            android:layout_marginEnd="0dp"
+
+            android:background="@color/pink">
+
+            <Button
+                android:id="@+id/CLEAR_BUTTON"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:text="Clear"
+                android:textSize="8sp"
+                 />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/data_LL"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:layout_above="@+id/INFO_LAYOUT"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="10dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/COUNT_SEND_TEXT"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="  TX： 0 data, 0 char"
+                android:textColor="@color/Blue" />
+
+            <TextView
+                android:id="@+id/COUNT_RECEIVED_TEXT"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="RX： 0 data, 0 char"
+                android:textColor="@color/Green2" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/CLEAR_ImageButton"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/data_LL"
+            android:layout_alignTop="@+id/SEND_BUTTON"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="0dp"
+            android:layout_marginBottom="0dp"
+            android:src="@drawable/ic_clear" />
+
+        <ImageButton
+            android:id="@+id/goDown_ImageButton"
+            android:layout_width="40dp"
+            android:layout_height="50dp"
+            android:layout_alignBottom="@+id/MESSAGE_TEXT"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="5dp"
+            android:layout_marginBottom="200dp"
+            android:src="@drawable/ic_go_down" />
+
+        <ImageButton
+            android:id="@+id/goUp_ImageButton"
+            android:layout_width="40dp"
+            android:layout_height="50dp"
+            android:layout_above="@+id/goDown_ImageButton"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="5dp"
+            android:layout_marginBottom="0dp"
+            android:src="@drawable/ic_go_up" />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/SEND_BUTTON"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp"
+            android:background="@color/pink">
+
+            <CheckBox
+                android:id="@+id/checkBox_ADD_CRLF"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:text="CR+LF " />
+        </RelativeLayout>
+
+    </RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

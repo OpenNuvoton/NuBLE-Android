@@ -1,0 +1,67 @@
+<resources>
+    <string name="app_name">NuBLE</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Information</string>
+
+    <string name="menu_uart">TRSP_UART</string>
+    <string name="menu_led">TRSP_LED</string>
+    <string name="menu_pf">OTA</string>
+    <string name="ble_not_supported">Bluetooth is Disable . please open .</string>
+    <string name="GPS_not_supported">GPS is Disable . please open .</string>
+    <string name="ble_busy">APP is busy . please unChecked loop mode .</string>
+    <string name="fota_same_version_no_need_update">The version is the same, no need to update.</string>
+    <string name="error_no_support_connect_priority_high">error:FOTA no support connection priority high, please use other.</string>
+    <string name="error_no_bin_file_name">error: please select bin file first.</string>
+    <string name="select_bin_file_name">Select OTA bin file</string>
+    <string name="error_no_support_this_mtu">error:This mtu length is not supported.</string>
+    <string name="error_fota_already_started_no_chang_mtu">error:FOTA is running, MTU and PHY update are invalid.</string>
+    <string name="only_support_1M">This phone only support 1MHz PHY</string>
+    <string name="ble_not_connect">BLE is not connect</string>
+    <string name="error_no_path_or_file">not find the file bin.</string>
+    <string name="menu_datarate">Data Rate</string>
+    <string name="ate_run">Run</string>
+    <string name="ate_stop">Stop</string>
+    <string name="menu_info">Information</string>
+
+    <string-array name="phy_array">
+        <item>PHY TX:1M RX:1M</item>
+        <item>PHY TX:2M RX:2M</item>
+<!--        <item>PHY TX:2M RX:1M</item>-->
+<!--        <item>PHY TX:1M RX:2M</item>-->
+    </string-array>
+
+    <string-array name="priority_array">
+        <item>30ms-50ms BALANCED</item>
+        <item>11.25ms-15ms HIGH</item>
+        <item>100ms-120ms LOW</item>
+    </string-array>
+
+    <string-array name="mtu_data_array">
+        <item>MTU Data 20Byte</item>
+        <item>MTU Data 36Byte</item>
+        <item>MTU Data 68Byte</item>
+        <item>MTU Data 132Byte</item>
+        <item>MTU Data 196Byte</item>
+        <item>MTU Data 244Byte</item>
+    </string-array>
+
+    <string-array name="throughput_test_item_array_ctmr">
+        <item>pls select</item>
+        <item>App TX</item>
+        <item>Device TX</item>
+    </string-array>
+
+    <string-array name="throughput_ate_type_array">
+        <item>No ATE</item>
+        <item>Test All Option</item>
+        <item>Test PHY 1M/2M Option</item>
+        <item>Test ConnectInterval Option</item>
+        <item>Test Packet Len Option</item>
+        <item>Test Repeat this Option</item>
+    </string-array>
+
+</resources>

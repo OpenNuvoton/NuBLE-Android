@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.example.m310ble.ui.home.HomeFragment"
+        android:label="@string/menu_uart"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/nav_gallery"
+        android:name="com.example.m310ble.ui.LED.GalleryFragment"
+        android:label="@string/menu_led"
+        tools:layout="@layout/fragment_gallery" />
+
+    <fragment
+        android:id="@+id/nav_slideshow"
+        android:name="com.example.m310ble.ui.OTA.AppFotaFragment"
+        android:label="@string/menu_pf"
+        tools:layout="@layout/fragment_slideshow" />
+
+    <fragment
+        android:id="@+id/nav_datarate"
+        android:name="com.example.m310ble.ui.rate.AppThroughputFrsgment"
+        android:label="@string/menu_datarate"
+        tools:layout="@layout/fragment_application_throughput" />
+
+    <fragment
+        android:id="@+id/nav_info"
+        android:name="com.example.m310ble.ui.info.InfoFragment"
+        android:label="@string/menu_info"
+        tools:layout="@layout/info_fragment" />
+</navigation>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single"
+            android:checkable="true">
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@drawable/ic_menu_ble"
+            android:title="@string/menu_uart" />
+        <item
+            android:id="@+id/nav_gallery"
+            android:icon="@drawable/ic_menu_led"
+            android:title="@string/menu_led" />
+        <item
+            android:id="@+id/nav_slideshow"
+            android:icon="@drawable/ic_menu_pr"
+            android:title="@string/menu_pf" />
+        <item
+            android:id="@+id/nav_datarate"
+            android:icon="@drawable/ic_menu_rate"
+            android:title="@string/menu_datarate" />
+        <item
+            android:id="@+id/nav_info"
+            android:icon="@drawable/ic_menu_info"
+            android:title="@string/menu_info" />
+    </group>
+</menu>
