@@ -173,7 +173,7 @@ class HomeFragment : Fragment() {
                     _Write_BC = _activity!!.TempWriteBC_UART
                     _Notify_BC = _activity!!.TempNotifyBC_UART
 
-                    _Notify_BC!!.setNotify(true, myNotifyListener)
+                    _Notify_BC?.setNotify(true, myNotifyListener)
 
                     if (_BleData!!.isConnect) {
                         requireActivity().runOnUiThread {
@@ -182,7 +182,7 @@ class HomeFragment : Fragment() {
 
                             _bleButton!!.isEnabled = true
                             _bleButton!!.setText("Disconnect")
-                            _bleButton!!.setTextColor(Color.RED)
+                            _bleButton!!.setTextColor(Color.WHITE)
                         }
                     } else {
                         requireActivity().runOnUiThread {
@@ -524,7 +524,7 @@ class HomeFragment : Fragment() {
 
                     _bleButton!!.isEnabled = true
                     _bleButton!!.setText("Disconnect")
-                    _bleButton!!.setTextColor(Color.RED)
+                    _bleButton!!.setTextColor(Color.WHITE)
                 }
             }
 

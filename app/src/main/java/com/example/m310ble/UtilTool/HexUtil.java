@@ -1,5 +1,14 @@
 package com.example.m310ble.UtilTool;
 
+import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.OpenableColumns;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 public class HexUtil {
 
 
@@ -203,6 +212,25 @@ public class HexUtil {
                     + Character.digit(s.charAt(i+1), 16));
         }
         return data;
+    }
+    public static String getFileName(Uri uri, Context context) {
+        String fileName = null;
+        Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            fileName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+            cursor.close();
+        }
+        return fileName;
+    }
+
+    public static byte[] getBytesFromInputStream(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            byteBuffer.write(buffer, 0, bytesRead);
+        }
+        return byteBuffer.toByteArray();
     }
 
     private static int hexVal(char ch) {

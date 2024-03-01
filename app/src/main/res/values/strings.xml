@@ -26,6 +26,7 @@
     <string name="ate_run">Run</string>
     <string name="ate_stop">Stop</string>
     <string name="menu_info">Information</string>
+    <string name="menu_policy">Privacy policy</string>
 
     <string-array name="phy_array">
         <item>PHY TX:1M RX:1M</item>

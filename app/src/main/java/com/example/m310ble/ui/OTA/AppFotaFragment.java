@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
+import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -58,11 +59,13 @@ import com.example.m310ble.R;
 import com.example.m310ble.UtilTool.ResourceManager;
 import com.example.m310ble.UtilTool.TextTool;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -76,7 +79,7 @@ import static com.clj.fastble.utils.HexUtil.encodeHexStr_OneByte;
 //import android.icu.util.Calendar;
 
 
-@RequiresApi (Build.VERSION_CODES.JELLY_BEAN_MR2)
+@RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class AppFotaFragment extends Fragment {
 
     private BleApplication app;
@@ -94,14 +97,14 @@ public class AppFotaFragment extends Fragment {
     private int fota_user_sel_mtu_data_length;
 
     //使用者選擇資料傳輸間隔時間(ms)
-    private int fota_user_enter_data_delaytime_ms=0; //default is 0
+    private int fota_user_enter_data_delaytime_ms = 0; //default is 0
 
     //This parameter determines the length of the Notify interval. The default value is 1920.
     //When the data is transmitted 1920 bytes, the process must wait until the notify from the DUT is received.
-    private int fota_user_sel_notify_interval_length=1920;
+    private int fota_user_sel_notify_interval_length = 1920;
 
-    private int fota_Already_transmitted_length=0;
-    private int fota_Notyet_transmitted_length=0;
+    private int fota_Already_transmitted_length = 0;
+    private int fota_Notyet_transmitted_length = 0;
 
     //overnigth test 統計次數
     private int FotaSuccessNum = 0;
@@ -152,7 +155,7 @@ public class AppFotaFragment extends Fragment {
     public int write_stop_test_flag = 0;
 
     //讀取檔案
-    final int FILE_SELECT_CODE =0;
+    final int FILE_SELECT_CODE = 5566;
 
     //Provide transmission percentage calculation
     public int Percentage_val = 0;
@@ -161,6 +164,8 @@ public class AppFotaFragment extends Fragment {
     //傳輸封包數量
     public int Number_of_packets = 0;
     public int Number_of_remaining_data = 0;
+    private ProgressBar PBar1;
+    private byte[] finalLoadBinData ;
 
     //private final class FotaHandler extends Handler {
     class FotaHandler extends Handler {
@@ -177,18 +182,18 @@ public class AppFotaFragment extends Fragment {
             AppFotaFragment appFotaFragment = mAppFotaFragment.get();
 
             if (appFotaFragment != null) {
-                switch(msg.what) {
-                    case FotaMsg.FOTA_START:{
+                switch (msg.what) {
+                    case FotaMsg.FOTA_START: {
                         final int fota_one_package_data_length = fota_user_sel_mtu_data_length;
                         final int DelayTimeEachData = fota_user_enter_data_delaytime_ms;
-                        final BleDevice HDM_bleDevice = _connectBleDevice; //這裡銜接上藍牙裝置
-                        Object[] objs =  (Object[]) msg.obj;
+                        final BleDevice HDM_bleDevice = _connectBleDevice; //這裡銜接上藍牙裝置 by WP
+                        Object[] objs = (Object[]) msg.obj;
                         final TextView HDM_txt = (TextView) objs[0];
                         final ProgressBar HDM_PBar1 = (ProgressBar) objs[1];
 
                         int FotaTransmittedLength = 0; //(每一批資料) 已經傳輸的長度，當長度 = fota_user_sel_notify_interval_length 時，就要等待Notify傳送狀態，再接著傳後面資料
                         //load bin data
-                        final byte[] load_bin_data = new byte[524320]; //512K Byte  (524,288+32=524,320)
+                        final byte[] load_bin_data = finalLoadBinData;//new byte[524320]; //512K Byte  (524,288+32=524,320)//這裡銜接上檔案選擇器的檔案數據 by WP
                         final byte[] load_bin_data_0to15_device_info = new byte[16];
                         final byte[] load_bin_data_include_defined_adrs = new byte[655392]; //512K Byte  (524288+32+131072=655,392), (131072=4*32768), (32768=524288/16), (524288=0x80000)
 
@@ -201,14 +206,9 @@ public class AppFotaFragment extends Fragment {
                         write_stop_test_flag = 0;
                         FotaFirstRun = true;
 
-                        while(((app.getNeedReConnect())&&(write_stop_test_flag==(int)0)) || (FOTA_States==FotaMsg.FOTA_STATE_CMD_START) ||(FotaFirstRun)) {
+                        while (((app.getNeedReConnect()) && (write_stop_test_flag == (int) 0)) || (FOTA_States == FotaMsg.FOTA_STATE_CMD_START) || (FotaFirstRun)) {
 
-                            //取得外部儲存媒體的目錄(/sdcard)
-//                            String binpath = Environment.getExternalStorageDirectory().getPath();
-                            String binpath = Environment.getExternalStoragePublicDirectory(DIRECTORY_DOWNLOADS).getPath();
-                            File binFile = new File(binpath + "/fota_bin/" + FOTA_load_bin_name);
-
-                            if(FOTA_States!=FotaMsg.FOTA_STATE_CMD_START) {
+                            if (FOTA_States != FotaMsg.FOTA_STATE_CMD_START) {
                                 while ((!app.getReConnectSuccessFlag()) && (!FotaFirstRun)) //等待重連
                                 {
                                     try {
@@ -286,17 +286,6 @@ public class AppFotaFragment extends Fragment {
                                         addText(HDM_txt, "Notify Interval = " + fota_user_sel_notify_interval_length, false);
                                     }
                                 });
-
-                                try {
-                                    FileInputStream fin = new FileInputStream(binFile);
-                                    while (fin.read(load_bin_data) != -1) {
-                                    }
-                                    fin.close();
-                                } catch (FileNotFoundException e) {
-                                    e.printStackTrace();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
 
                                 System.arraycopy(load_bin_data, 0, load_bin_data_0to15_device_info, 0, 16);
                                 final String strBinData_0to15_Byte = HexUtil.formatHexString(load_bin_data_0to15_device_info, false);// parameter2 = false ; 每筆資料中間無空格
@@ -422,7 +411,7 @@ public class AppFotaFragment extends Fragment {
 
                                 //===========================================================================================
                                 // indicate
-                                BleManager.getInstance().indicate(HDM_bleDevice,FotaMsg.FOTASERVICEUUID,FotaMsg.FOTACHARACTERISTICUUID_WRITE_INDICATE,
+                                BleManager.getInstance().indicate(HDM_bleDevice, FotaMsg.FOTASERVICEUUID, FotaMsg.FOTACHARACTERISTICUUID_WRITE_INDICATE,
                                         new BleIndicateCallback() {
                                             @Override
                                             public void onIndicateSuccess() {
@@ -536,7 +525,7 @@ public class AppFotaFragment extends Fragment {
                                                             });
                                                             FotaRescuedflag = true;
                                                         } else {
-                                                            IndicateUnfinishedDataNextAddress=0;
+                                                            IndicateUnfinishedDataNextAddress = 0;
                                                             FotaRescuedflag = false;
                                                         }
                                                         FOTA_States = FotaMsg.FOTA_STATE_INDICATION_RECEIVER_DEVICE_INFO_START;
@@ -1001,7 +990,7 @@ public class AppFotaFragment extends Fragment {
                                     });
 
                             while (FOTA_States != FotaMsg.FOTA_STATE_INDICATION_RECEIVER_DEVICE_INFO_START) {
-                                if(FOTA_States == FotaMsg.FOTA_STATE_INDICATION_NO_RECEIVER_DEVICE_INFO_START) {
+                                if (FOTA_States == FotaMsg.FOTA_STATE_INDICATION_NO_RECEIVER_DEVICE_INFO_START) {
                                     //Indication no receiver device start information, APP actively disconnects DUT connection.
                                     if (BleManager.getInstance().isConnected(HDM_bleDevice)) {
                                         BleManager.getInstance().disconnect(HDM_bleDevice);
@@ -1021,7 +1010,7 @@ public class AppFotaFragment extends Fragment {
                                     e.printStackTrace();
                                 }
 
-                                if((!BleManager.getInstance().isConnected(HDM_bleDevice)) || (app.getReConnectSuccessFlag())) {
+                                if ((!BleManager.getInstance().isConnected(HDM_bleDevice)) || (app.getReConnectSuccessFlag())) {
                                     //disconnect，exit while (FOTA_States != FotaMsg.FOTA_STATE_INDICATION_RECEIVER_DEVICE_INFO_START)
                                     try {
                                         Thread.sleep(FotaMsg.FOTA_DISCONNECTED_WAIT_TIME_IN_WHILE_LOOP);
@@ -1032,8 +1021,7 @@ public class AppFotaFragment extends Fragment {
                                     break;
                                 }
                             }
-                            if(FOTA_States == FotaMsg.FOTA_STATE_INDICATION_NO_RECEIVER_DEVICE_INFO_START)
-                            {
+                            if (FOTA_States == FotaMsg.FOTA_STATE_INDICATION_NO_RECEIVER_DEVICE_INFO_START) {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -1055,19 +1043,17 @@ public class AppFotaFragment extends Fragment {
                             //bit[5]:
                             //bit[6]:
                             //bit[7]:
-                            if((FOTA_INDICATE_STATES&0x04) == 0x04)
-                            {
+                            if ((FOTA_INDICATE_STATES & 0x04) == 0x04) {
                                 //Device告知已開始，非從頭開始傳送
                                 FOTA_INDICATE_STATES &= 0xFB;
-                                if((FotaMsg.FOTA_RESCUE_UNFINISHED_DATA) && (IndicateUnfinishedDataCRCCompareResult)){//支持續傳，且CRC相等情況下，直接從Device 預期Address開始傳送。
-                                    if(!FotaMsg.FOTA_AUTO_SHIFT_START_ADDRESS_FROM_ZREO) {
+                                if ((FotaMsg.FOTA_RESCUE_UNFINISHED_DATA) && (IndicateUnfinishedDataCRCCompareResult)) {//支持續傳，且CRC相等情況下，直接從Device 預期Address開始傳送。
+                                    if (!FotaMsg.FOTA_AUTO_SHIFT_START_ADDRESS_FROM_ZREO) {
                                         data_start_adrs = IndicateUnfinishedDataNextAddress;
-                                    }
-                                    else{
+                                    } else {
                                         data_start_adrs += IndicateUnfinishedDataNextAddress;
                                     }
                                     FotaTransmittedLength = 0;
-                                }else{
+                                } else {
                                     //發送一個command去ERASE，ERASE之後斷線。
                                     byte[] wcmd_erase = new byte[FotaMsg.FOTA_CMD_QUERY_LENGTH]; //write data
                                     wcmd_erase[0] = FotaMsg.FOTA_CMD_ERASE;
@@ -1118,37 +1104,34 @@ public class AppFotaFragment extends Fragment {
 
                             FOTA_States = FotaMsg.FOTA_STATE_SENT_DATA;
                             Number_of_remaining_data = ((data_stop_adrs - data_start_adrs) % fota_one_package_data_length);
-                            if(Number_of_remaining_data != 0) {
+                            if (Number_of_remaining_data != 0) {
                                 Number_of_packets = ((data_stop_adrs - data_start_adrs) / fota_one_package_data_length) + 1;
-                            }
-                            else{
+                            } else {
                                 Number_of_packets = ((data_stop_adrs - data_start_adrs) / fota_one_package_data_length);
                             }
 
                             //prepare data array
                             for (int wlength = 0; wlength < Number_of_packets; wlength++) {
                                 final byte[] wsubdata = new byte[fota_one_package_data_length + 4]; //write data
-                                if(!FotaMsg.FOTA_AUTO_SHIFT_START_ADDRESS_FROM_ZREO) {
+                                if (!FotaMsg.FOTA_AUTO_SHIFT_START_ADDRESS_FROM_ZREO) {
                                     wsubdata[0] = (byte) (((wlength * fota_one_package_data_length) + data_start_adrs) & 0xff); //LSB
                                     wsubdata[1] = (byte) ((((wlength * fota_one_package_data_length) + data_start_adrs) >> 8) & 0xff);
                                     wsubdata[2] = (byte) ((((wlength * fota_one_package_data_length) + data_start_adrs) >> 16) & 0xff); //MSB
-                                }
-                                else {
-                                    wsubdata[0] = (byte) (((wlength * fota_one_package_data_length)+IndicateUnfinishedDataNextAddress) & 0xff); //LSB
-                                    wsubdata[1] = (byte) ((((wlength * fota_one_package_data_length)+IndicateUnfinishedDataNextAddress) >> 8) & 0xff);
-                                    wsubdata[2] = (byte) ((((wlength * fota_one_package_data_length)+IndicateUnfinishedDataNextAddress) >> 16) & 0xff); //MSB
+                                } else {
+                                    wsubdata[0] = (byte) (((wlength * fota_one_package_data_length) + IndicateUnfinishedDataNextAddress) & 0xff); //LSB
+                                    wsubdata[1] = (byte) ((((wlength * fota_one_package_data_length) + IndicateUnfinishedDataNextAddress) >> 8) & 0xff);
+                                    wsubdata[2] = (byte) ((((wlength * fota_one_package_data_length) + IndicateUnfinishedDataNextAddress) >> 16) & 0xff); //MSB
                                 }
                                 //wsubdata[3] = (byte) fota_one_package_data_length; //length
 
                                 //System.arraycopy(來源, 起始索引, 目的, 起始索引, 複製長度)
                                 //支持續傳要再加上 data_start_adrs
                                 //System.arraycopy(load_bin_data, ((wlength * fota_one_package_data_length) + data_start_adrs + 32), wsubdata, 4, fota_one_package_data_length);
-                                if((Number_of_remaining_data!=0) && (wlength==(Number_of_packets-1))){ //最後一筆資料且未整除(不足1筆資料量)
+                                if ((Number_of_remaining_data != 0) && (wlength == (Number_of_packets - 1))) { //最後一筆資料且未整除(不足1筆資料量)
                                     wsubdata[3] = (byte) Number_of_remaining_data; //length
                                     System.arraycopy(load_bin_data, ((wlength * fota_one_package_data_length) + data_start_adrs + 32), wsubdata, 4, Number_of_remaining_data);
-                                    System.arraycopy(wsubdata, 0, load_bin_data_include_defined_adrs, (wlength * (fota_one_package_data_length+4)), (Number_of_remaining_data+4));
-                                }
-                                else {
+                                    System.arraycopy(wsubdata, 0, load_bin_data_include_defined_adrs, (wlength * (fota_one_package_data_length + 4)), (Number_of_remaining_data + 4));
+                                } else {
                                     wsubdata[3] = (byte) fota_one_package_data_length; //length
                                     System.arraycopy(load_bin_data, ((wlength * fota_one_package_data_length) + data_start_adrs + 32), wsubdata, 4, fota_one_package_data_length);
                                     System.arraycopy(wsubdata, 0, load_bin_data_include_defined_adrs, (wlength * (fota_one_package_data_length + 4)), (fota_one_package_data_length + 4));
@@ -1156,11 +1139,11 @@ public class AppFotaFragment extends Fragment {
                             }
 
                             //**修改切割資料長度
-                            BleManager.getInstance().setSplitWriteNum(fota_one_package_data_length+4);
+                            BleManager.getInstance().setSplitWriteNum(fota_one_package_data_length + 4);
                             //**修改切割資料後，傳輸間的時間間隔。
                             BleManager.getInstance().setInterval_Between_TwoPackage((long) 0);
 
-                            FotaTransmittedLength=0;//***連續傳FOTA(debug mode)要在這歸零。
+                            FotaTransmittedLength = 0;//***連續傳FOTA(debug mode)要在這歸零。
                             Date savetimest;
                             Date savetimesp;
                             long timediff;
@@ -1169,26 +1152,24 @@ public class AppFotaFragment extends Fragment {
                             for (int wlength = 0; wlength < Number_of_packets; wlength++) { // fota_one_package_data_length
                                 final byte[] wdata; //write data
 
-                                if((wlength+(fota_user_sel_notify_interval_length/fota_one_package_data_length))<=((data_stop_adrs - data_start_adrs) / fota_one_package_data_length)){
-                                    wdata = new byte[fota_user_sel_notify_interval_length+4*(fota_user_sel_notify_interval_length/fota_one_package_data_length)]; //write data
-                                    System.arraycopy(load_bin_data_include_defined_adrs, (wlength * (fota_one_package_data_length+4)), wdata, 0, (fota_user_sel_notify_interval_length+4*(fota_user_sel_notify_interval_length/fota_one_package_data_length)));
+                                if ((wlength + (fota_user_sel_notify_interval_length / fota_one_package_data_length)) <= ((data_stop_adrs - data_start_adrs) / fota_one_package_data_length)) {
+                                    wdata = new byte[fota_user_sel_notify_interval_length + 4 * (fota_user_sel_notify_interval_length / fota_one_package_data_length)]; //write data
+                                    System.arraycopy(load_bin_data_include_defined_adrs, (wlength * (fota_one_package_data_length + 4)), wdata, 0, (fota_user_sel_notify_interval_length + 4 * (fota_user_sel_notify_interval_length / fota_one_package_data_length)));
                                     fota_Notyet_transmitted_length = fota_user_sel_notify_interval_length;
-                                }
-                                else{
-                                    if(Number_of_remaining_data!=0) { //表示最後一筆不整除
-                                        wdata = new byte[((Number_of_packets - 1 - wlength)*(fota_one_package_data_length+4)) + (Number_of_remaining_data + 4)]; //write data
-                                        System.arraycopy(load_bin_data_include_defined_adrs, (wlength * (fota_one_package_data_length+4)), wdata, 0, (((Number_of_packets - 1 - wlength)*(fota_one_package_data_length+4)) + (Number_of_remaining_data + 4)));
-                                        fota_Notyet_transmitted_length = (((Number_of_packets - 1 - wlength)*(fota_one_package_data_length)) + Number_of_remaining_data);
-                                    }
-                                    else{
-                                        wdata = new byte[((((data_stop_adrs - data_start_adrs) / fota_one_package_data_length) - wlength)*(fota_one_package_data_length+4))]; //write data
-                                        System.arraycopy(load_bin_data_include_defined_adrs, (wlength * (fota_one_package_data_length+4)), wdata, 0, ((((data_stop_adrs - data_start_adrs) / fota_one_package_data_length) - wlength)*(fota_one_package_data_length+4)));
-                                        fota_Notyet_transmitted_length = ((((data_stop_adrs - data_start_adrs) / fota_one_package_data_length) - wlength)*(fota_one_package_data_length));
+                                } else {
+                                    if (Number_of_remaining_data != 0) { //表示最後一筆不整除
+                                        wdata = new byte[((Number_of_packets - 1 - wlength) * (fota_one_package_data_length + 4)) + (Number_of_remaining_data + 4)]; //write data
+                                        System.arraycopy(load_bin_data_include_defined_adrs, (wlength * (fota_one_package_data_length + 4)), wdata, 0, (((Number_of_packets - 1 - wlength) * (fota_one_package_data_length + 4)) + (Number_of_remaining_data + 4)));
+                                        fota_Notyet_transmitted_length = (((Number_of_packets - 1 - wlength) * (fota_one_package_data_length)) + Number_of_remaining_data);
+                                    } else {
+                                        wdata = new byte[((((data_stop_adrs - data_start_adrs) / fota_one_package_data_length) - wlength) * (fota_one_package_data_length + 4))]; //write data
+                                        System.arraycopy(load_bin_data_include_defined_adrs, (wlength * (fota_one_package_data_length + 4)), wdata, 0, ((((data_stop_adrs - data_start_adrs) / fota_one_package_data_length) - wlength) * (fota_one_package_data_length + 4)));
+                                        fota_Notyet_transmitted_length = ((((data_stop_adrs - data_start_adrs) / fota_one_package_data_length) - wlength) * (fota_one_package_data_length));
                                     }
                                 }
 
                                 //Calculate the progress percentage
-                                Percentage_val = ((wlength+((data_start_adrs-load_bin_file_start_adrs)/fota_one_package_data_length)) * 100) / (data_total_length / fota_one_package_data_length);
+                                Percentage_val = ((wlength + ((data_start_adrs - load_bin_file_start_adrs) / fota_one_package_data_length)) * 100) / (data_total_length / fota_one_package_data_length);
                                 if ((Percentage_preval) != (Percentage_val)) { //1step = 10% show to panel,否則會拖到TX速度
                                     //Change progress bar
                                     runOnUiThread(new Runnable() {
@@ -1199,7 +1180,6 @@ public class AppFotaFragment extends Fragment {
                                     });
                                     Percentage_preval = Percentage_val;
                                 }
-
 
 
 //                                savetimesp = new Date(System.currentTimeMillis());   //先不隱藏
@@ -1232,16 +1212,16 @@ public class AppFotaFragment extends Fragment {
                                 Date waitNotifyTimeSt;
                                 Date waitNotifyTimeSp;
                                 long waitNotifyTimediff;
-                                if(FotaTransmittedLength == fota_user_sel_notify_interval_length) {
+                                if (FotaTransmittedLength == fota_user_sel_notify_interval_length) {
                                     //Notify Interval, wait Notify, and clear this parameter
                                     int wait_notify_loopNum = 0;
 
                                     waitNotifyTimeSt = new Date(System.currentTimeMillis());
-                                    while(!NotifyOccurredFlag){
+                                    while (!NotifyOccurredFlag) {
                                         wait_notify_loopNum += 1;
                                         waitNotifyTimeSp = new Date(System.currentTimeMillis());
                                         waitNotifyTimediff = waitNotifyTimeSp.getTime() - waitNotifyTimeSt.getTime();
-                                        if((waitNotifyTimediff/1000)>=FotaMsg.FOTA_NO_NOTIFY_RECEIVER_TIIME_OUT_UNIT_SEC)// /1000 以秒為單位
+                                        if ((waitNotifyTimediff / 1000) >= FotaMsg.FOTA_NO_NOTIFY_RECEIVER_TIIME_OUT_UNIT_SEC)// /1000 以秒為單位
                                         {
                                             waitNotifyTimeSt = waitNotifyTimeSp;
                                             waitNotifyTimediff = 0;
@@ -1269,13 +1249,13 @@ public class AppFotaFragment extends Fragment {
                                     });
 */
                                     final int finalWait_notify_loopNum = wait_notify_loopNum;
-                                    if(FOTA_NOTIFY_STATES == 0x00) //DATA SUCCESS
+                                    if (FOTA_NOTIFY_STATES == 0x00) //DATA SUCCESS
                                     {
                                         //資料傳輸成功，紀錄長度歸零
                                         runOnUiThread(new Runnable() {
                                             @Override
                                             public void run() {
-                                                addText(HDM_txt, "=== Notify success, wait Loop num: "+Integer.toString(finalWait_notify_loopNum)+" ===", false);
+                                                addText(HDM_txt, "=== Notify success, wait Loop num: " + Integer.toString(finalWait_notify_loopNum) + " ===", false);
                                             }
                                         });
                                         FotaTransmittedLength = 0;
@@ -1297,8 +1277,8 @@ public class AppFotaFragment extends Fragment {
                                     //bit[5]: DATA_ADDRESS_ERROR
                                     //bit[6]:
                                     //bit[7]:
-                                    while(FOTA_NOTIFY_STATES!=0x00) {
-                                        if(((FOTA_NOTIFY_STATES & 0x02)==0x02) || (FOTA_NOTIFY_STATES & 0x04)==0x04) {
+                                    while (FOTA_NOTIFY_STATES != 0x00) {
+                                        if (((FOTA_NOTIFY_STATES & 0x02) == 0x02) || (FOTA_NOTIFY_STATES & 0x04) == 0x04) {
                                             /*
                                             try {
                                                 Thread.sleep(5000); //try 錯誤等待5秒
@@ -1333,8 +1313,7 @@ public class AppFotaFragment extends Fragment {
                                             FOTA_NOTIFY_STATES &= 0xF9;
                                             FotaTransmittedLength = 0;
                                             FOTA_States = FotaMsg.FOTA_STATE_CMD_START;
-                                        }
-                                        else {
+                                        } else {
                                             //clear states
                                             FOTA_NOTIFY_STATES &= 0x06;
                                         }
@@ -1342,8 +1321,7 @@ public class AppFotaFragment extends Fragment {
                                     NotifyOccurredFlag = false;
 
                                     //收到Notify 的不如預期資料，直接回到START重新問Address。
-                                    if(FOTA_States == FotaMsg.FOTA_STATE_CMD_START)
-                                    {
+                                    if (FOTA_States == FotaMsg.FOTA_STATE_CMD_START) {
                                         break; //離開For 迴圈
                                     }
                                 } //if(NotifyOccurredFlag) {
@@ -1407,7 +1385,7 @@ public class AppFotaFragment extends Fragment {
                                                     }
                                                 });
                                                  */
-                                                if(current == total){
+                                                if (current == total) {
                                                     write_one_package_end_falg = 1;
                                                     write_success_falg = 1;
                                                 }
@@ -1432,7 +1410,7 @@ public class AppFotaFragment extends Fragment {
 
                                                 //希望斷線後不要重連，目的是等待所有數據都傳輸結束後再重新連線，避免衝突出錯。
                                                 //Samsung A31 當斷線後就不繼續傳資料
-                                                if(FotaMsg.FOTA_WAIT_FAILURE_DATA_TO_BE_TRANSMITTED) {
+                                                if (FotaMsg.FOTA_WAIT_FAILURE_DATA_TO_BE_TRANSMITTED) {
                                                     if (fota_Notyet_transmitted_length > 0) {
                                                         app.setReConnectWait(true); //暫停重連
                                                     } else {
@@ -1448,32 +1426,31 @@ public class AppFotaFragment extends Fragment {
                                 //完成後藉由 write_success_falg 判斷是否傳輸成功
                                 //若傳輸失敗，判斷為斷線或是傳輸失敗，斷線直接重來，傳輸失敗可回到上方利用 FOTA_STATE_CMD_START 詢問
                                 //if(FotaMsg.FOTA_WAIT_FAILURE_DATA_TO_BE_TRANSMITTED) {
-                                    long datatimecount=0;
-                                    int fota_Notyet_transmitted_length_temp=fota_Notyet_transmitted_length;
-                                    while ((write_one_package_end_falg == 0) || ((write_one_package_end_falg == 1) && (fota_Notyet_transmitted_length > 0)) && (datatimecount==10000)) {
-                                        //while (write_one_package_end_falg==0) {
-                                        try {
-                                            Thread.sleep(1);
-                                        } catch (InterruptedException e) {
-                                            // TODO Auto-generated catch block
-                                            e.printStackTrace();
-                                        }
-
-                                        if(fota_Notyet_transmitted_length_temp==fota_Notyet_transmitted_length) {
-                                            datatimecount += 1;
-                                        }
-                                        else{
-                                            datatimecount = 0;
-                                            fota_Notyet_transmitted_length_temp=fota_Notyet_transmitted_length;
-                                        }
-
-                                        //此版本若在這斷線離開，會發生資料還沒傳完，就重新開始，會造成舊資料與新流程衝突。
-                                        //需注意:當斷線後若手機不繼續傳輸資料，也沒有Fail資訊回call，則手機會無限等待，是隱藏Issue.
-                                        if ((!BleManager.getInstance().isConnected(HDM_bleDevice)) || (app.getReConnectSuccessFlag())) {
-                                            //紀錄曾經斷線
-                                            disConnectFlag = true;
-                                        }
+                                long datatimecount = 0;
+                                int fota_Notyet_transmitted_length_temp = fota_Notyet_transmitted_length;
+                                while ((write_one_package_end_falg == 0) || ((write_one_package_end_falg == 1) && (fota_Notyet_transmitted_length > 0)) && (datatimecount == 10000)) {
+                                    //while (write_one_package_end_falg==0) {
+                                    try {
+                                        Thread.sleep(1);
+                                    } catch (InterruptedException e) {
+                                        // TODO Auto-generated catch block
+                                        e.printStackTrace();
                                     }
+
+                                    if (fota_Notyet_transmitted_length_temp == fota_Notyet_transmitted_length) {
+                                        datatimecount += 1;
+                                    } else {
+                                        datatimecount = 0;
+                                        fota_Notyet_transmitted_length_temp = fota_Notyet_transmitted_length;
+                                    }
+
+                                    //此版本若在這斷線離開，會發生資料還沒傳完，就重新開始，會造成舊資料與新流程衝突。
+                                    //需注意:當斷線後若手機不繼續傳輸資料，也沒有Fail資訊回call，則手機會無限等待，是隱藏Issue.
+                                    if ((!BleManager.getInstance().isConnected(HDM_bleDevice)) || (app.getReConnectSuccessFlag())) {
+                                        //紀錄曾經斷線
+                                        disConnectFlag = true;
+                                    }
+                                }
 //                                }
 //                                else{
 //                                     while (write_one_package_end_falg==0) {
@@ -1506,13 +1483,12 @@ public class AppFotaFragment extends Fragment {
                                     //離開for loop
                                     //break;
                                     //if((!BleManager.getInstance().isConnected(HDM_bleDevice)) || (app.getReConnectSuccessFlag())) {
-                                    if(disConnectFlag){
+                                    if (disConnectFlag) {
                                         //已經斷線直接離開 for loop
                                         write_one_package_end_falg = 0;
                                         write_success_falg = 0;
                                         break;
-                                    }
-                                    else{
+                                    } else {
                                         // 尚未斷線，資料遺漏，可以從FOTA_STATE_CMD_START 開始
                                         FotaTransmittedLength = 0;
                                         FOTA_States = FotaMsg.FOTA_STATE_CMD_START;
@@ -1520,11 +1496,10 @@ public class AppFotaFragment extends Fragment {
                                         write_success_falg = 0;
                                         break;
                                     }
-                                }
-                                else{
+                                } else {
                                     //FotaTransmittedLength = fota_user_sel_notify_interval_length;
                                     FotaTransmittedLength = fota_Already_transmitted_length;
-                                    wlength += ((FotaTransmittedLength/fota_one_package_data_length)-1); // -1原因是因為for loop會+1
+                                    wlength += ((FotaTransmittedLength / fota_one_package_data_length) - 1); // -1原因是因為for loop會+1
                                     //for (int wlength = 0; wlength < ((data_stop_adrs - data_start_adrs) / fota_one_package_data_length); wlength++) { // fota_one_package_data_length
                                 }
                                 write_one_package_end_falg = 0;
@@ -1544,7 +1519,7 @@ public class AppFotaFragment extends Fragment {
                                  */
 
                                 //disconnect，exit for loop
-                                if((!BleManager.getInstance().isConnected(HDM_bleDevice)) || (app.getReConnectSuccessFlag())) {
+                                if ((!BleManager.getInstance().isConnected(HDM_bleDevice)) || (app.getReConnectSuccessFlag())) {
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
@@ -1555,7 +1530,7 @@ public class AppFotaFragment extends Fragment {
                                 }
                             }//for(int wlength=0;wlength< ((data_stop_adrs-data_start_adrs)/fota_one_package_data_length) ;wlength++) { // fota_one_package_data_length
 
-                            if(FOTA_States == FotaMsg.FOTA_STATE_CMD_START){
+                            if (FOTA_States == FotaMsg.FOTA_STATE_CMD_START) {
                                 //收到Notify 直接回到CMD Start
                                 // save
                                 SaveText2(HDM_txt); //Download folder
@@ -1563,7 +1538,7 @@ public class AppFotaFragment extends Fragment {
                                 continue;
                             }
 
-                            if((!BleManager.getInstance().isConnected(HDM_bleDevice)) || (app.getReConnectSuccessFlag())) {
+                            if ((!BleManager.getInstance().isConnected(HDM_bleDevice)) || (app.getReConnectSuccessFlag())) {
                                 //disconnect, 回到最上層while
                                 try {
                                     Thread.sleep(FotaMsg.FOTA_DISCONNECTED_WAIT_TIME_IN_WHILE_LOOP);
@@ -1633,7 +1608,7 @@ public class AppFotaFragment extends Fragment {
                             });
 
                             while (FOTA_States != FotaMsg.FOTA_STATE_INDICATION_RECEIVER_DEVICE_INFO_APPLY) {
-                                if(FOTA_States == FotaMsg.FOTA_STATE_INDICATION_NO_RECEIVER_DEVICE_INFO_APPLY) {
+                                if (FOTA_States == FotaMsg.FOTA_STATE_INDICATION_NO_RECEIVER_DEVICE_INFO_APPLY) {
                                     //Indication no receiver device apply information, APP actively disconnects DUT connection.
                                     if (BleManager.getInstance().isConnected(HDM_bleDevice)) {
                                         BleManager.getInstance().disconnect(HDM_bleDevice);
@@ -1653,7 +1628,7 @@ public class AppFotaFragment extends Fragment {
                                     e.printStackTrace();
                                 }
 
-                                if((!BleManager.getInstance().isConnected(HDM_bleDevice)) || (app.getReConnectSuccessFlag())) {
+                                if ((!BleManager.getInstance().isConnected(HDM_bleDevice)) || (app.getReConnectSuccessFlag())) {
                                     //disconnect，exit while (FOTA_States != FotaMsg.FOTA_STATE_INDICATION_RECEIVER_DEVICE_INFO_APPLY)
                                     try {
                                         Thread.sleep(FotaMsg.FOTA_DISCONNECTED_WAIT_TIME_IN_WHILE_LOOP);
@@ -1665,7 +1640,7 @@ public class AppFotaFragment extends Fragment {
                                 }
                             }
 
-                            if(FOTA_States == FotaMsg.FOTA_STATE_INDICATION_NO_RECEIVER_DEVICE_INFO_APPLY)  //Device通知即將斷線
+                            if (FOTA_States == FotaMsg.FOTA_STATE_INDICATION_NO_RECEIVER_DEVICE_INFO_APPLY)  //Device通知即將斷線
                             {
                                 runOnUiThread(new Runnable() {
                                     @Override
@@ -1693,7 +1668,7 @@ public class AppFotaFragment extends Fragment {
 
                             final int fota_use_time_mm = (int) (diff / 1000) / 60;
                             final int fota_use_time_ss = (int) (diff / 1000) - (int) fota_use_time_mm * 60;
-                            final int fota_use_time_ms = (int) diff - ((int) (fota_use_time_mm * 60 * 1000) + (int) fota_use_time_ss*1000);
+                            final int fota_use_time_ms = (int) diff - ((int) (fota_use_time_mm * 60 * 1000) + (int) fota_use_time_ss * 1000);
 
                             runOnUiThread(new Runnable() {
                                 @Override
@@ -1714,7 +1689,7 @@ public class AppFotaFragment extends Fragment {
 
                             FOTA_States = FotaMsg.FOTA_STATE_IDAL;
 
-                            if((FotaMsg.FOTA_CONTINUOUS_MODE) && (!app.getReleaseToCTMR())) {
+                            if ((FotaMsg.FOTA_CONTINUOUS_MODE) && (!app.getReleaseToCTMR())) {
                                 //等一分鐘，重新連線
                                 try {
                                     Thread.sleep(FotaMsg.FOTA_WAIT_NEXT_FOTA_PROCCESS_TIME_MS);
@@ -1722,9 +1697,8 @@ public class AppFotaFragment extends Fragment {
                                     // TODO Auto-generated catch block
                                     e.printStackTrace();
                                 }
-                            }
-                            else{
-                                write_stop_test_flag=1;
+                            } else {
+                                write_stop_test_flag = 1;
                             }
                             // save
                             SaveText2(HDM_txt); //Download
@@ -1737,7 +1711,7 @@ public class AppFotaFragment extends Fragment {
                                 }
                             });
                         }
-                        write_stop_test_flag=0; //clear
+                        write_stop_test_flag = 0; //clear
 
                         runOnUiThread(new Runnable() {
                             @Override
@@ -1748,7 +1722,7 @@ public class AppFotaFragment extends Fragment {
                     }
                     break;
 
-                    default:{
+                    default: {
 
                     }
                     break;
@@ -1792,13 +1766,13 @@ public class AppFotaFragment extends Fragment {
         spinner_phy.setOnItemSelectedListener(phy_slectListener);
 
         fotatxtlog = (TextView) view.findViewById(R.id.fotatxtlog);
-        final ProgressBar PBar1 = (ProgressBar) view.findViewById(R.id.progressbar_thput);
+        PBar1 = (ProgressBar) view.findViewById(R.id.progressbar_thput);
         fotatxtlog.setMovementMethod(ScrollingMovementMethod.getInstance());
 
         bleDeviceText = (TextView) view.findViewById(R.id.BLE_DEVICE_TEXT);
         bleStatusText = (TextView) view.findViewById(R.id.BLE_STATUS_TEXT);
-        if(BleManager.getInstance().isConnected(_connectBleDevice) == true){
-            bleDeviceText.setText("BLE Device: "+_connectBleDevice.getDevice().getName());
+        if (BleManager.getInstance().isConnected(_connectBleDevice) == true) {
+            bleDeviceText.setText("BLE Device: " + _connectBleDevice.getDevice().getName());
             bleStatusText.setText("BLE Device: Connect Success");
 //            btn_ota_run.setEnabled(false);
 //            btn_san_ble.setEnabled(false);
@@ -1834,15 +1808,13 @@ public class AppFotaFragment extends Fragment {
 
         //MTU
         AdapterView.OnItemSelectedListener spnOnItemSelected2 = new AdapterView.OnItemSelectedListener() {
-            public void onItemSelected(AdapterView<?> parent, View view,int pos, long id) {
+            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
 
-                if(FOTA_States==FotaMsg.FOTA_STATE_SENT_DATA)
-                {
+                if (FOTA_States == FotaMsg.FOTA_STATE_SENT_DATA) {
                     Toast.makeText(getActivity(), getString(R.string.error_fota_already_started_no_chang_mtu), Toast.LENGTH_LONG).show();
                 }
 
-                switch(pos)
-                {
+                switch (pos) {
                     case 0:
                         fota_user_sel_mtu_data_length = 16;
                         break;
@@ -1867,6 +1839,7 @@ public class AppFotaFragment extends Fragment {
                 }
 
             }
+
             public void onNothingSelected(AdapterView<?> parent) {
                 //
             }
@@ -1884,101 +1857,15 @@ public class AppFotaFragment extends Fragment {
         spinner_mtu.setOnItemSelectedListener(spnOnItemSelected2);
         spinner_mtu.setSelection(5); //default is 240Byte.
 
-        //select bin file
         btn_sel_bin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                btn_ota_run.setEnabled(false);
-                //取得外部儲存媒體的目錄(/sdcard)
-//                String binpath = Environment.getExternalStorageDirectory().getPath();
-                String binpath = Environment.getExternalStoragePublicDirectory(DIRECTORY_DOWNLOADS).getPath();
-                binpath += "/fota_bin";
-
-                File file = new File(binpath);
-
-                if(!file.exists()) {
-                    file.mkdir();
-                }
-
-                String[] fileList = file.list();
-
-                final List<String> fileNameList = new ArrayList<>();
-
-                if(fileList == null || fileList.length <=0){
-                    Toast.makeText( getActivity(),binpath.toString() +" "+ getString(R.string.error_no_path_or_file), Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                for (String f : fileList){
-                    fileNameList.add(f);
-                }
-
-                final String finalBinPath = binpath; //temp
-                new AlertDialog.Builder(getActivity())
-                        .setTitle(getActivity().getString(R.string.select_bin_file_name))
-                        .setItems(fileNameList.toArray(new String[fileNameList.size()]), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, final int which) {  //選擇檔案
-                                //load bin data
-                                final byte[] load_bin_data_info = new byte[524320]; //512K Byte  (524,288+32=524,320)
-                                FOTA_load_bin_name = fileNameList.get(which);
-                                File file = new File(finalBinPath  + "/" + FOTA_load_bin_name);
-
-                                try {
-                                    FileInputStream fin = new FileInputStream(file);
-                                    while (fin.read(load_bin_data_info) != -1) {
-                                    }
-                                    fin.close();
-                                } catch (FileNotFoundException e) {
-                                    e.printStackTrace();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-
-                                final byte[] load_bin_data_0to15_device_info = new byte[16];
-                                System.arraycopy(load_bin_data_info, 0, load_bin_data_0to15_device_info, 0, 16);
-                                final String strBinData_0to15_Byte = HexUtil.formatHexString(load_bin_data_0to15_device_info, false);// parameter2 = false ; 每筆資料中間無空格
-                                final String strFwName = HexUtil.formatASCIIString(load_bin_data_0to15_device_info);
-                                // print information
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        addText(fotatxtlog, "=======load file information======", true);
-                                        addText(fotatxtlog, "load file: " + fileNameList.get(which), true);
-                                        addText(fotatxtlog, "start adrs: " + encodeHexStr_OneByte((char)load_bin_data_info[20]) + encodeHexStr_OneByte((char)load_bin_data_info[21])
-                                                + encodeHexStr_OneByte((char)load_bin_data_info[22]) + encodeHexStr_OneByte((char)load_bin_data_info[23]), false);
-                                        addText(fotatxtlog, "stop adrs: " + encodeHexStr_OneByte((char)load_bin_data_info[24]) + encodeHexStr_OneByte((char)load_bin_data_info[25])
-                                                + encodeHexStr_OneByte((char)load_bin_data_info[26]) + encodeHexStr_OneByte((char)load_bin_data_info[27]), false);
-                                        addText(fotatxtlog, "CRC: " + encodeHexStr_OneByte((char)load_bin_data_info[16]) + encodeHexStr_OneByte((char)load_bin_data_info[17])
-                                                + encodeHexStr_OneByte((char)load_bin_data_info[18]) + encodeHexStr_OneByte((char)load_bin_data_info[19]), false);
-                                        addText(fotatxtlog, "Load FW Info: " + strBinData_0to15_Byte, true);
-                                        addText(fotatxtlog, "Load FW Ver Name: " + strFwName, true);
-                                        addText(fotatxtlog, "==================================", true);
-                                        addText(fotatxtlog, "", true);
-                                    }
-                                });
-
-                                //Only confirm the DUT version, do not execute FOTA.
-                                FOTA_USER_QUERY_FW_VERSION_ONLY = true;
-                                /*if(!app.getReleaseToCTMR()){
-                                    fota_user_sel_notify_interval_length = Integer.parseInt(et1.getText().toString().trim());
-                                }*/
-
-                                //=================啟動新線程=======================
-                                prepare();
-                                if (!mHandling)
-                                    return;
-                                Message message = mHandler.obtainMessage();
-                                message.what = FotaMsg.FOTA_START;
-                                //message.obj = (TextView)txt;
-                                message.obj = new Object[] { (TextView)fotatxtlog, (ProgressBar)PBar1};
-                                mHandler.sendMessage(message);
-                                //================================================
-
-                            }
-                        }).show();
-            }//public void onClick(View view) {
-        });//btn_sel_bin.setOnClickListener(new View.OnClickListener()
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("*/*");  // 所有文件类型
+                startActivityForResult(intent, FILE_SELECT_CODE);
+            }
+        });
 
 
         //FOTA proccess
@@ -1986,13 +1873,13 @@ public class AppFotaFragment extends Fragment {
             @Override
             public void onClick(View view) {
 
-                if(FOTA_load_bin_name==null) {
+                if (FOTA_load_bin_name == null) {
                     //沒有檔名，跳出警告視窗並且退出
                     Toast.makeText(getActivity(), getString(R.string.error_no_bin_file_name), Toast.LENGTH_LONG).show();
                     return;
                 }
 
-                if(app.getConnectInterval()==1) {
+                if (app.getConnectInterval() == 1) {
                     //(11.25ms–15ms) 1: CONNECTION_PRIORITY_HIGH
                     Toast.makeText(getActivity(), getString(R.string.error_no_support_connect_priority_high), Toast.LENGTH_LONG).show();
                     return;
@@ -2012,7 +1899,7 @@ public class AppFotaFragment extends Fragment {
                 Message message = mHandler.obtainMessage();
                 message.what = FotaMsg.FOTA_START;
                 //message.obj = (TextView)txt;
-                message.obj = new Object[] {(TextView)fotatxtlog, (ProgressBar)PBar1};
+                message.obj = new Object[]{(TextView) fotatxtlog, (ProgressBar) PBar1};
                 mHandler.sendMessage(message);
                 //================================================
 
@@ -2023,40 +1910,106 @@ public class AppFotaFragment extends Fragment {
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        /*
-        try {
-            if (requestCode == PICK_IMAGE_MULTIPLE && resultCode == RESULT_OK && null != data) {
-                Toast.makeText(this, "Success to pick image", Toast.LENGTH_LONG).show();
-                // 這邊便可以對輸入的 data 進行我們想要做的處理
-            }
-        } catch (Exception e) {
-            Toast.makeText(this, "Something wrong", Toast.LENGTH_LONG).show();
-        }
-        */
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent resultData) {
+        super.onActivityResult(requestCode, resultCode, resultData);
+        if (requestCode == FILE_SELECT_CODE && resultCode == Activity.RESULT_OK) {
+            if (resultData != null) {
+                Uri uri = resultData.getData();
+                if (uri != null) {
+                    // 您可以在这里使用所选文件的URI（例如，读取文件内容）
+                    // 请注意，您需要适当处理权限和文件访问
 
-        // 選擇檔案
-        switch(requestCode) {
-            case FILE_SELECT_CODE:
-                if (resultCode == Activity.RESULT_OK) {
-                    // Get the Uri of the selected file
-                    Uri uri = data.getData();
-                    Log.d(FotaMsg.FOTA_PROCCESS_TAG, "File Uri: " + uri.toString());
-                    // Get the path
-                    String path = getPathFromUri(getContext(), uri); // Paul Burke写的函数，根据Uri获得文件路径
-                    Log.d(FotaMsg.FOTA_PROCCESS_TAG, "File Path: " + path);
-                    // Get the file instance
-                    // File file = new File(path);
-                    // Initiate the upload
+                    Context context = getContext();
+                    //                    final byte[] load_bin_data_info = new byte[524320]; //512K Byte  (524,288+32=524,320)
+                    ContentResolver contentResolver = context.getContentResolver();
+                    ByteArrayOutputStream load_bin_data_info = new ByteArrayOutputStream();
+                    try {
+                        InputStream inputStream = contentResolver.openInputStream(uri);
+                        if (inputStream != null) {
+                            FOTA_load_bin_name = com.example.m310ble.UtilTool.HexUtil.getFileName(uri, context);
+//                            byte[] fileBytes = com.example.m310ble.UtilTool.HexUtil.getBytesFromInputStream(inputStream);
+
+                            byte[] buffer = new byte[1024];
+                            int bytesRead;
+                            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                                load_bin_data_info.write(buffer, 0, bytesRead);
+                            }
+
+                        }
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    byte[] finalBin = load_bin_data_info.toByteArray();
+//                    final byte[] load_bin_data_info = new byte[524320]; //512K Byte  (524,288+32=524,320)
+                    final byte[] load_bin_data_0to15_device_info = new byte[16];
+                    System.arraycopy(finalBin, 0, load_bin_data_0to15_device_info, 0, 16);
+                    final String strBinData_0to15_Byte = HexUtil.formatHexString(load_bin_data_0to15_device_info, false);// parameter2 = false ; 每筆資料中間無空格
+                    final String strFwName = HexUtil.formatASCIIString(load_bin_data_0to15_device_info);
+                    finalLoadBinData =  finalBin;
+                    // print information
+                    
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            addText(fotatxtlog, "=======load file information======", true);
+                            addText(fotatxtlog, "load file: " + FOTA_load_bin_name, true);
+                            addText(fotatxtlog, "start adrs: " + encodeHexStr_OneByte((char) finalBin[20]) + encodeHexStr_OneByte((char) finalBin[21])
+                                    + encodeHexStr_OneByte((char) finalBin[22]) + encodeHexStr_OneByte((char) finalBin[23]), false);
+                            addText(fotatxtlog, "stop adrs: " + encodeHexStr_OneByte((char) finalBin[24]) + encodeHexStr_OneByte((char) finalBin[25])
+                                    + encodeHexStr_OneByte((char) finalBin[26]) + encodeHexStr_OneByte((char) finalBin[27]), false);
+                            addText(fotatxtlog, "CRC: " + encodeHexStr_OneByte((char) finalBin[16]) + encodeHexStr_OneByte((char) finalBin[17])
+                                    + encodeHexStr_OneByte((char) finalBin[18]) + encodeHexStr_OneByte((char) finalBin[19]), false);
+                            addText(fotatxtlog, "Load FW Info: " + strBinData_0to15_Byte, true);
+                            addText(fotatxtlog, "Load FW Ver Name: " + strFwName, true);
+                            addText(fotatxtlog, "==================================", true);
+                            addText(fotatxtlog, "", true);
+                        }
+                    });
+
+                    //Only confirm the DUT version, do not execute FOTA.
+                    FOTA_USER_QUERY_FW_VERSION_ONLY = true;
+                                /*if(!app.getReleaseToCTMR()){
+                                    fota_user_sel_notify_interval_length = Integer.parseInt(et1.getText().toString().trim());
+                                }*/
+
+                    //=================啟動新線程=======================
+                    prepare();
+                    if (!mHandling)
+                        return;
+                    Message message = mHandler.obtainMessage();
+                    message.what = FotaMsg.FOTA_START;
+                    //message.obj = (TextView)txt;
+                    message.obj = new Object[]{(TextView) fotatxtlog, (ProgressBar) PBar1};
+                    mHandler.sendMessage(message);
+                    //================================================
                 }
-                break;
+            }
         }
-        super.onActivityResult(requestCode, resultCode, data);
     }
+//        // 選擇檔案
+//        switch(requestCode) {
+//            case FILE_SELECT_CODE:
+//
+//                if (resultCode == Activity.RESULT_OK) {
+//                    // Get the Uri of the selected file
+//                    Uri uri = data.getData();
+//                    Log.d(FotaMsg.FOTA_PROCCESS_TAG, "File Uri: " + uri.toString());
+//                    // Get the path
+//                    String path = getPathFromUri(getContext(), uri); // Paul Burke写的函数，根据Uri获得文件路径
+//                    Log.d(FotaMsg.FOTA_PROCCESS_TAG, "File Path: " + path);
+//                    // Get the file instance
+//                    // File file = new File(path);
+//                    // Initiate the upload
+//                }
+//                break;
+//        }
 
 
 
-//=============================取得路徑=================================================
+    //=============================取得路徑=================================================
     @SuppressLint("NewApi")
     public static String getPathFromUri(final Context context, final Uri uri) {
         if (uri == null) {
@@ -2156,35 +2109,35 @@ public class AppFotaFragment extends Fragment {
 //        if(content.indexOf("success")>-1){
 //            colorText = TextTool.getColoredSpanned(content,"#00DB00");
 //        }
-        if(content.indexOf("FotaSuccessNum")>-1){
-            colorText = TextTool.getColoredSpanned(content,"#00DB00");
+        if (content.indexOf("FotaSuccessNum") > -1) {
+            colorText = TextTool.getColoredSpanned(content, "#00DB00");
         }
-        if(content.indexOf("FotaFailureNum")>-1){
-            colorText = TextTool.getColoredSpanned(content,"#CE0000");
+        if (content.indexOf("FotaFailureNum") > -1) {
+            colorText = TextTool.getColoredSpanned(content, "#CE0000");
         }
-        if(content.indexOf("FotaRescuedNum")>-1){
-            colorText = TextTool.getColoredSpanned(content,"#2828FF");
+        if (content.indexOf("FotaRescuedNum") > -1) {
+            colorText = TextTool.getColoredSpanned(content, "#2828FF");
         }
-        if(content.indexOf("====")>-1){
-            colorText = TextTool.getColoredSpanned(content,"#EAC100");
+        if (content.indexOf("====") > -1) {
+            colorText = TextTool.getColoredSpanned(content, "#EAC100");
         }
-        if(content.indexOf("can be updated")>-1){
-            colorText = TextTool.getColoredSpanned(content,"#00DB00");
+        if (content.indexOf("can be updated") > -1) {
+            colorText = TextTool.getColoredSpanned(content, "#00DB00");
         }
-        if(content.indexOf("no need to update")>-1){
-            colorText = TextTool.getColoredSpanned(content,"#CE0000");
+        if (content.indexOf("no need to update") > -1) {
+            colorText = TextTool.getColoredSpanned(content, "#CE0000");
         }
-        if(content.indexOf("Connect Success")>-1){
-            colorText = TextTool.getColoredSpanned(content,"#00DB00");
+        if (content.indexOf("Connect Success") > -1) {
+            colorText = TextTool.getColoredSpanned(content, "#00DB00");
         }
-        if(content.indexOf("Dis Connected")>-1){
-            colorText = TextTool.getColoredSpanned(content,"#CE0000");
+        if (content.indexOf("Dis Connected") > -1) {
+            colorText = TextTool.getColoredSpanned(content, "#CE0000");
         }
-        if(content.indexOf("Fail")>-1){
-            colorText = TextTool.getColoredSpanned(content,"#CE0000");
+        if (content.indexOf("Fail") > -1) {
+            colorText = TextTool.getColoredSpanned(content, "#CE0000");
         }
 
-        if((FotaMsg.PRINT_FOTA_PROCCESS_PRINT_TO_TXTVIEW==1) || (stubborn)) {
+        if ((FotaMsg.PRINT_FOTA_PROCCESS_PRINT_TO_TXTVIEW == 1) || (stubborn)) {
             textView.append(Html.fromHtml(colorText));
             textView.append("\n"); //換行
             int offset = textView.getLineCount() * textView.getLineHeight();
@@ -2197,7 +2150,7 @@ public class AppFotaFragment extends Fragment {
 
     //延續增加字串在同一行後面 只用一隔空格 隔開每次的結果
     private void addText_do_no_change_line(TextView textView, String content, Boolean stubborn) {
-        if((FotaMsg.PRINT_FOTA_PROCCESS_PRINT_TO_TXTVIEW==1)||(stubborn)) {
+        if ((FotaMsg.PRINT_FOTA_PROCCESS_PRINT_TO_TXTVIEW == 1) || (stubborn)) {
             textView.append(content);
             textView.append(" ");
             int offset = textView.getLineCount() * textView.getLineHeight();
@@ -2223,19 +2176,18 @@ public class AppFotaFragment extends Fragment {
         Calendar mCal = Calendar.getInstance();
         CharSequence gettoday = DateFormat.format("yyyy_MM_dd_kk", mCal.getTime());
         CharSequence gettoday2 = DateFormat.format("mm", mCal.getTime());
-        int time_jarge = Integer.valueOf((String)gettoday2);
+        int time_jarge = Integer.valueOf((String) gettoday2);
 
         File dir = getActivity().getFilesDir();
         String strsavelog;
-        if(time_jarge>=30) {
+        if (time_jarge >= 30) {
             strsavelog = "_savelog2.txt";
-        }
-        else{
+        } else {
             strsavelog = "_savelog1.txt";
         }
 
 
-        if(FotaMsg.LOG_FILE_TYPE==FotaMsg.LOG_FILE_APPLY){
+        if (FotaMsg.LOG_FILE_TYPE == FotaMsg.LOG_FILE_APPLY) {
             File outFile_delete = new File(dir, ((String) gettoday) + strsavelog);
             //判斷檔案是否存在，存在則刪除
             if (outFile_delete.exists()) {
@@ -2248,8 +2200,7 @@ public class AppFotaFragment extends Fragment {
             //將資料寫入檔案中，若 package name 為 com.myapp
             //就會產生 /data/data/com.myapp/files/test.txt 檔案
             writeToFileReplace(outFile, textView.getText().toString());
-        }
-        else{
+        } else {
             //在該目錄底下開啟或建立檔名為 "test.txt" 的檔案
             File outFile = new File(dir, (String) gettoday + strsavelog);
 
@@ -2258,7 +2209,7 @@ public class AppFotaFragment extends Fragment {
             writeToFileAppend(outFile, textView.getText().toString());
 
             //寫完會清除 textView 內容 (release 版本Log很少，清掉會不完整)
-            if(!app.getReleaseToCTMR()){
+            if (!app.getReleaseToCTMR()) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -2271,12 +2222,12 @@ public class AppFotaFragment extends Fragment {
 
     //save to Download folder
     //@RequiresApi(api=Build.VERSION_CODES.N)
-    private void SaveText2(final TextView textView)  {
+    private void SaveText2(final TextView textView) {
         Calendar mCal = Calendar.getInstance();
         //CharSequence s = DateFormat.format("yyyy-MM-dd kk:mm:ss", mCal.getTime());    // kk:24小時制, hh:12小時制
         CharSequence gettoday = DateFormat.format("yyyy_MM_dd_kk", mCal.getTime());    // kk:24小時制, hh:12小時制
         CharSequence gettoday2 = DateFormat.format("mm", mCal.getTime());
-        int time_jarge = Integer.valueOf((String)gettoday2);
+        int time_jarge = Integer.valueOf((String) gettoday2);
 
         //String savelogpath = Environment.getExternalStorageDirectory().getPath();
         String savelogpath = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -2284,33 +2235,31 @@ public class AppFotaFragment extends Fragment {
 
         File dir = new File(savelogpath);
         //check file path
-        if (!dir.exists()){
+        if (!dir.exists()) {
             //不存在則建立它
             dir.mkdir();
         }
 
         String strsavelog;
-        if(time_jarge>=30) {
+        if (time_jarge >= 30) {
             strsavelog = "_savelog2.txt";
-        }
-        else{
+        } else {
             strsavelog = "_savelog1.txt";
         }
 
 
-        if(FotaMsg.LOG_FILE_TYPE==FotaMsg.LOG_FILE_APPLY){
-            File outFile_delete = new File(savelogpath , ((String) gettoday) + strsavelog);
+        if (FotaMsg.LOG_FILE_TYPE == FotaMsg.LOG_FILE_APPLY) {
+            File outFile_delete = new File(savelogpath, ((String) gettoday) + strsavelog);
             //判斷檔案是否存在，存在則刪除
             if (outFile_delete.exists()) {
                 outFile_delete.delete();
             }
-            File outFile = new File(savelogpath , ((String) gettoday) + strsavelog);
+            File outFile = new File(savelogpath, ((String) gettoday) + strsavelog);
             //將資料寫入檔案中，若 package name 為 com.myapp
             //就會產生 /data/data/com.myapp/files/test.txt 檔案
             writeToFileReplace(outFile, textView.getText().toString());
-        }
-        else{
-            File outFile = new File(savelogpath , ((String) gettoday) + strsavelog);
+        } else {
+            File outFile = new File(savelogpath, ((String) gettoday) + strsavelog);
             //將資料寫入檔案中，若 package name 為 com.myapp
             //就會產生 /data/data/com.myapp/files/test.txt 檔案
             writeToFileAppend(outFile, textView.getText().toString());
@@ -2357,7 +2306,7 @@ public class AppFotaFragment extends Fragment {
     public void onStop() {
         super.onStop();
         _isAutoReConnect = false;
-        BleManager.getInstance().disconnect(_connectBleDevice);
+//        BleManager.getInstance().disconnect(_connectBleDevice);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2385,10 +2334,10 @@ public class AppFotaFragment extends Fragment {
         @Override
         public void onClick(View v) {
 
-            Log.i("AppFotaFragment","onClickScanBleButton");
+            Log.i("AppFotaFragment", "onClickScanBleButton");
 
             //若已經連線就先斷線
-            if(_connectBleDevice != null && BleManager.getInstance().isConnected(_connectBleDevice) == true){
+            if (_connectBleDevice != null && BleManager.getInstance().isConnected(_connectBleDevice) == true) {
                 _isAutoReConnect = false;
                 BleManager.getInstance().disconnect(_connectBleDevice);
                 return;
@@ -2397,20 +2346,20 @@ public class AppFotaFragment extends Fragment {
             _scanDeviceStringArray.clear();
             _scanDeviceArray.clear();
 
-            _alertDialog = new MaterialDialog(ResourceManager.context,MaterialDialog.getDEFAULT_BEHAVIOR());
+            _alertDialog = new MaterialDialog(ResourceManager.context, MaterialDialog.getDEFAULT_BEHAVIOR());
             _alertDialog.cancelOnTouchOutside(false);
             _alertDialog.cancelable(false);
-            _alertDialog.title(null,"BLE Device Scan...");
+            _alertDialog.title(null, "BLE Device Scan...");
             DialogListExtKt.listItems(_alertDialog, null, _scanDeviceStringArray, null, true, (materialDialog, index, text) -> {
 
-                Log.i("DialogListExtKt","listItems:"+index);
+                Log.i("DialogListExtKt", "listItems:" + index);
 
-                if(index >= _scanDeviceArray.size()){
+                if (index >= _scanDeviceArray.size()) {
                     return null;
                 }
 
                 connectBle(_scanDeviceArray.get(index));//藍芽連線
-                bleDeviceText.setText("BLE Device : "+_scanDeviceArray.get(index).getName());
+                bleDeviceText.setText("BLE Device : " + _scanDeviceArray.get(index).getName());
                 _isAutoReConnect = true;
                 BleManager.getInstance().cancelScan();
                 runOnUiThread(new Runnable() {
@@ -2421,7 +2370,7 @@ public class AppFotaFragment extends Fragment {
                 });
                 return null;
             });
-            _alertDialog.negativeButton(null,"cancel", (materialDialog) -> {
+            _alertDialog.negativeButton(null, "cancel", (materialDialog) -> {
                 BleManager.getInstance().cancelScan();
                 _alertDialog.dismiss();
                 return null;
@@ -2437,17 +2386,17 @@ public class AppFotaFragment extends Fragment {
 
                 @Override
                 public void onScanning(BleDevice bleDevice) {
-                    Log.d("AppFotaFragment", "result:"+bleDevice.getName()  +"    MAC:"+bleDevice.getMac()+"    Rssi:"+bleDevice.getRssi());
+                    Log.d("AppFotaFragment", "result:" + bleDevice.getName() + "    MAC:" + bleDevice.getMac() + "    Rssi:" + bleDevice.getRssi());
 
-                    if(bleDevice.getName()== null){
+                    if (bleDevice.getName() == null) {
                         return;
                     }
-                    String displayName = bleDevice.getName()+"\n" +bleDevice.getMac();
+                    String displayName = bleDevice.getName() + "\n" + bleDevice.getMac();
 
-                    if(!_scanDeviceStringArray.contains(displayName) && !_scanDeviceArray.contains(bleDevice)){
+                    if (!_scanDeviceStringArray.contains(displayName) && !_scanDeviceArray.contains(bleDevice)) {
                         _scanDeviceStringArray.add(displayName);
                         _scanDeviceArray.add(bleDevice);
-                        DialogListExtKt.updateListItems(_alertDialog,null,_scanDeviceStringArray,null,null);
+                        DialogListExtKt.updateListItems(_alertDialog, null, _scanDeviceStringArray, null, null);
                     }
 
                 }
@@ -2455,7 +2404,7 @@ public class AppFotaFragment extends Fragment {
                 @Override
                 public void onScanFinished(List<BleDevice> scanResultList) {
                     _scanDeviceStringArray.add("** End of Search, If the device is not found, please try again. **");
-                    DialogListExtKt.updateListItems(_alertDialog,null,_scanDeviceStringArray,null,null);
+                    DialogListExtKt.updateListItems(_alertDialog, null, _scanDeviceStringArray, null, null);
                 }
             });
         }
@@ -2490,7 +2439,7 @@ public class AppFotaFragment extends Fragment {
             btn_sel_bin.setEnabled(false);
             btn_san_ble.setText("SCAN BLE");
 
-            if(_isAutoReConnect == true){
+            if (_isAutoReConnect == true) {
                 BleManager.getInstance().connect(bleDevice, bgk);
             }
         }
@@ -2553,7 +2502,7 @@ public class AppFotaFragment extends Fragment {
             btn_san_ble.setEnabled(true);
             btn_san_ble.setText("SCAN BLE");
 
-            if(_isAutoReConnect == true){
+            if (_isAutoReConnect == true) {
                 BleManager.getInstance().connect(device, bgk);
             }
         }
@@ -2565,19 +2514,18 @@ public class AppFotaFragment extends Fragment {
     private AdapterView.OnItemSelectedListener phy_slectListener = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            if(FOTA_States==FotaMsg.FOTA_STATE_SENT_DATA)
-            {
+            if (FOTA_States == FotaMsg.FOTA_STATE_SENT_DATA) {
                 Toast.makeText(getActivity(), getString(R.string.error_fota_already_started_no_chang_mtu), Toast.LENGTH_LONG).show();
             }
 
-            if(_isSpinnerOnCreate == true){
+            if (_isSpinnerOnCreate == true) {
                 app.setReConnectTxPhy(1);
                 app.setReConnectRxPhy(1);
                 _isSpinnerOnCreate = false;
                 return;
             }
 
-            if(_connectBleDevice == null || BleManager.getInstance().isConnected(_connectBleDevice) == false){
+            if (_connectBleDevice == null || BleManager.getInstance().isConnected(_connectBleDevice) == false) {
                 Toast.makeText(getActivity(), getString(R.string.ble_not_connect), Toast.LENGTH_LONG).show();
                 spinner_phy.setSelection(0); //PHY default is 1M
                 return;
@@ -2591,8 +2539,7 @@ public class AppFotaFragment extends Fragment {
                 return;
             }
 
-            switch(position)
-            {
+            switch (position) {
                 case 0: //TX:1M RX:1M
                     app.setReConnectTxPhy(1);
                     app.setReConnectRxPhy(1);

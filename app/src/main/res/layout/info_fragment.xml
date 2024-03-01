@@ -74,7 +74,25 @@
             50515253-5455-5657-5859-5a5b5c5d5e5f\n\n
             CHARACTERISTICUUID_NOTIFY: \n
             0000fa02-0000-1000-8000-00805f9b34fb" />
+
+        <Button
+            android:id="@+id/policy_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="30dp"
+
+            android:layout_marginEnd="30dp"
+            android:layout_marginBottom="20dp"
+            android:text="@string/menu_policy" />
+
         />
+
+
     </RelativeLayout>
 
 </FrameLayout>

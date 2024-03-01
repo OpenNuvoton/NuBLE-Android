@@ -89,7 +89,7 @@ class GalleryFragment : Fragment() {
 
                     _bleButton!!.isEnabled = true
                     _bleButton!!.setText("Disconnect")
-                    _bleButton!!.setTextColor(Color.RED)
+
                 }
             } else {
                 requireActivity().runOnUiThread {
@@ -298,7 +298,7 @@ class GalleryFragment : Fragment() {
 
                     _bleButton!!.isEnabled = true
                     _bleButton!!.setText("Disconnect")
-                    _bleButton!!.setTextColor(Color.RED)
+
                 }
             }
         }

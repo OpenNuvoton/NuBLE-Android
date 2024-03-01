@@ -24,6 +24,7 @@ import com.clj.fastble.BleManager
 import com.clj.fastble.scan.BleScanRuleConfig
 import com.example.m310ble.Bluetooth.BluetoothLeData
 import com.example.m310ble.Bluetooth.BluetoothLeDataManager
+import com.example.m310ble.UtilTool.DialogTool
 import com.example.m310ble.UtilTool.Log
 import com.example.m310ble.UtilTool.PermissionManager
 import com.example.m310ble.UtilTool.ResourceManager
@@ -124,7 +125,17 @@ class MainActivity : AppCompatActivity() {
 //        navView.setNavigationItemSelectedListener(nvsl)
 //        _fragmentManager = supportFragmentManager
 
-        this.setPermission()
+        DialogTool.showAlertDialog(this,
+            "Prominent disclosure",
+            "If user wants to use BLE function in this app, user needs to open GPS, for search BLE device.\n" +
+                    "NuBLE collects location data to enable GPS searching BLE device, only when the app is opened.",
+            true,
+            false,
+            callback = { isok, isCancel ->
+                runOnUiThread {
+                    this.setPermission()
+                }
+            })
 
         BleManager.getInstance().init(getApplication())
 
@@ -169,7 +180,7 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item!!.groupId
         Log.i(TAG, "onOptionsItemSelected " + id)
 

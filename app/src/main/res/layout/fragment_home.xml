@@ -29,8 +29,8 @@
             android:layout_marginEnd="0dp"
             android:layout_marginBottom="0dp"
             android:scrollbars="vertical"
-            android:textSize="12sp"
-            android:singleLine="false" />
+            android:singleLine="false"
+            android:textSize="12sp" />
 
         <RelativeLayout
             android:id="@+id/INFO_LAYOUT"

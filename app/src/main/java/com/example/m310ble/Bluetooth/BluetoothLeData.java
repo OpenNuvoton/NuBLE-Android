@@ -16,7 +16,6 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 
-
 import com.example.m310ble.UtilTool.HexUtil;
 import com.example.m310ble.UtilTool.Log;
 
@@ -412,10 +411,12 @@ public class BluetoothLeData {
                         cd._value = characteristic.getValue();
                         String s = HexUtil.encodeHexStr(cd._value);
                         Log.d(TAG, "characteristic.getValue():" + s);
-                        if(_readListener!=null)
-                        _readListener.readCallBack((status == BluetoothGatt.GATT_SUCCESS), s);
-                        if(_readHexListener!=null)
-                        _readHexListener.readCallBack((status == BluetoothGatt.GATT_SUCCESS), cd._value);
+                        if(_readListener!=null) {
+                            _readListener.readCallBack((status == BluetoothGatt.GATT_SUCCESS), s);
+                        }
+                        if(_readHexListener!=null) {
+                            _readHexListener.readCallBack((status == BluetoothGatt.GATT_SUCCESS), cd._value);
+                        }
                     }
                 }
             }

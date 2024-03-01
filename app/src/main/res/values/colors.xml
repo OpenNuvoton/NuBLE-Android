@@ -11,4 +11,10 @@
     <color name="Blue">#0000FF</color>
     <color name="Green">#00FF00</color>
     <color name="Green2">#00DD00</color>
+
+    <color name="Red_nuA">#A11E23</color>
+    <color name="Red_nuB">#D72B2F</color>
+    <color name="Red_nuC">#EFA9AC</color>
+    <color name="Red_nuD">#F7D4D5</color>
+
 </resources>
